@@ -5,88 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Birthday Surprise</title>
   <style>
-    :root { --ui-z: 10; }
     body {
       margin:0; height:100vh; display:flex; flex-direction:column;
-      justify-content:center; align-items:center; background:#000;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      overflow:hidden;
+      justify-content:center; align-items:center;
+      font-family:sans-serif; overflow:hidden;
+      /* rainbow gradient background animation */
+      background: linear-gradient(270deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00ab, #ff0000);
+      background-size: 1800% 1800%;
+      animation: rainbowBG 20s linear infinite;
     }
+    @keyframes rainbowBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     #fwCanvas {
-      position:fixed; inset:0; width:100vw; height:100vh; z-index:0; pointer-events:none;
-      display:block;
+      position:fixed; inset:0; width:100%; height:100%; z-index:0;
     }
-    #clickBtn, #character, #message, #nextBtn { position:relative; z-index:var(--ui-z); }
+    #clickBtn, #character, #message, #nextBtn, #secondStage, #monkeyImg {
+      position:relative; z-index:10;
+    }
     #clickBtn, #nextBtn {
       padding:15px 30px; font-size:20px; border:0; border-radius:25px;
-      background:#ffb703; color:#fff; cursor:pointer;
-      box-shadow:0 6px 18px rgba(0,0,0,.25);
+      background:#ffb703; color:#fff; cursor:pointer; margin-top:20px;
     }
-    #clickBtn:hover, #nextBtn:hover { filter:brightness(0.95); }
+    #clickBtn:hover, #nextBtn:hover { filter:brightness(0.9); }
     #character { width:300px; margin:12px 0 6px; display:none; }
     #message {
       margin-top:6px; font-size:48px; font-weight:700; color:#e9f5ff;
-      min-height:64px; display:none; text-align:center; text-shadow:0 2px 8px rgba(0,0,0,.35);
+      display:none; text-align:center;
     }
-    #nextBtn { margin-top:14px; display:none; }
-
-    /* Monkey section */
-    #monkeyPage {
-      display:none; flex-direction:column; justify-content:center; align-items:center;
-      text-align:center; z-index:var(--ui-z);
+    #nextBtn { display:none; }
+    #secondStage {
+      display:none; flex-direction:column; align-items:center;
     }
-    #monkeyPage img {
-      max-width:90vw; max-height:75vh; border-radius:16px; 
-      box-shadow:0 20px 50px rgba(0,0,0,.5);
+    /* 🔥 Enlarged font size */
+    #monkeyText {
+      font-size:60px; font-weight:800; margin-top:20px; color:#fff;
+      text-shadow: 0 3px 10px rgba(0,0,0,0.6);
+      text-align:center;
     }
-    #monkeyPage h1 { color:#fff; margin-bottom:12px; }
+    #monkeyImg {
+      display:none; margin-top:30px; width:350px;
+      animation: pop 0.8s ease forwards;
+    }
+    @keyframes pop {
+      from { transform:scale(0); opacity:0; }
+      to { transform:scale(1); opacity:1; }
+    }
   </style>
 </head>
 <body>
   <canvas id="fwCanvas"></canvas>
 
-  <!-- First stage -->
+  <!-- Stage 1 -->
   <button id="clickBtn">Click me!</button>
   <img id="character" src="image.jpg" alt="Character"/>
   <div id="message"></div>
-  <button id="nextBtn">Click me!</button>
   <audio id="bgMusic" src="song.mp3" preload="auto"></audio>
+  <button id="nextBtn">Click me again!</button>
 
-  <!-- Second stage (monkey) -->
-  <div id="monkeyPage">
-    <h1>🐒 Surprise!</h1>
-    <p style="color:#fff;">Here’s your monkey!</p>
-    <img src="monkey.png" alt="Monkey"/>
+  <!-- Stage 2 -->
+  <div id="secondStage">
+    <div id="monkeyText">you smell like a monkey</div>
+    <img id="monkeyImg" src="image2.jpg" alt="Surprise!">
   </div>
 
   <!-- Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.min.js"></script>
-
   <script>
-    const c = document.getElementById('fwCanvas');
-    const ctx = c.getContext('2d');
-    function sizeCanvas(){ c.width = innerWidth; c.height = innerHeight; }
-    sizeCanvas(); addEventListener('resize', sizeCanvas, {passive:true});
-
     const btn = document.getElementById("clickBtn");
     const msg = document.getElementById("message");
     const music = document.getElementById("bgMusic");
     const character = document.getElementById("character");
     const nextBtn = document.getElementById("nextBtn");
-    const monkeyPage = document.getElementById("monkeyPage");
+    const secondStage = document.getElementById("secondStage");
+    const monkeyImg = document.getElementById("monkeyImg");
 
     const birthdayText = "Happy birthday Vernice!";
-
-    let colorCycle = false;
-    let hue = 0;
 
     btn.addEventListener("click", ()=>{
       btn.style.display="none";
       character.style.display="block";
       msg.style.display="block";
-      msg.textContent="";
-      colorCycle = true;
 
+      // typewriter
       let i=0;
       const interval=setInterval(()=>{
         msg.textContent += birthdayText[i]||"";
@@ -94,110 +98,28 @@
         if(i===birthdayText.length) clearInterval(interval);
       },120);
 
-      const revealNext = () => setTimeout(()=>{ nextBtn.style.display = "inline-block"; }, 2000);
-      music.play().then(revealNext).catch(revealNext);
+      // play music
+      music.play().catch(()=>{});
 
+      // confetti
       if(typeof confetti==="function"){
         confetti({particleCount:150, spread:70, origin:{y:0.6}});
       }
 
-      startBirthdayAnimation(["HAPPY","BIRTHDAY!","Vernice!"]);
+      // show NEXT button after 3s
+      setTimeout(()=>{ nextBtn.style.display="inline-block"; },3000);
     });
 
-    // When the second button is clicked, swap to monkey page
-    nextBtn.addEventListener('click', ()=>{
-      document.getElementById("character").style.display = "none";
-      document.getElementById("message").style.display = "none";
-      nextBtn.style.display = "none";
-      monkeyPage.style.display = "flex";
+    nextBtn.addEventListener("click", ()=>{
+      // hide stage 1, show stage 2
+      character.style.display="none";
+      msg.style.display="none";
+      nextBtn.style.display="none";
+      secondStage.style.display="flex";
+
+      // after 2s show image
+      setTimeout(()=>{ monkeyImg.style.display="block"; },2000);
     });
-
-    // Fireworks + Balloons animation
-    function startBirthdayAnimation(strings){
-      let w=c.width,h=c.height, hw=w/2, hh=h/2;
-      const opts={
-        strings, charSize:30, charSpacing:35, lineHeight:40,
-        fireworkPrevPoints:10, fireworkBaseLineWidth:5, fireworkAddedLineWidth:8,
-        fireworkSpawnTime:200, fireworkBaseReachTime:30, fireworkAddedReachTime:30,
-        fireworkCircleBaseSize:20, fireworkCircleAddedSize:10,
-        fireworkCircleBaseTime:30, fireworkCircleAddedTime:30,
-        fireworkCircleFadeBaseTime:10, fireworkCircleFadeAddedTime:5,
-        fireworkBaseShards:5, fireworkAddedShards:5, fireworkShardPrevPoints:3,
-        fireworkShardBaseVel:4, fireworkShardAddedVel:2,
-        fireworkShardBaseSize:3, fireworkShardAddedSize:3,
-        gravity:0.1, letterContemplatingWaitTime:60, balloonSpawnTime:10,
-        balloonBaseInflateTime:10, balloonAddedInflateTime:10,
-        balloonBaseSize:34, balloonAddedSize:16, balloonBaseVel:1.0, balloonAddedVel:0.5,
-        upFlow:-0.08, balloonBaseRadian:-(Math.PI/2-0.5), balloonAddedRadian:-1
-      };
-      const calc={ totalWidth: opts.charSpacing * Math.max(...opts.strings.map(s=>s.length)) };
-      const Tau=Math.PI*2, TauQuarter=Tau/4;
-      const letters=[]; ctx.font=opts.charSize+"px Verdana";
-
-      function Letter(ch,x,y){ this.char=ch; this.x=x; this.y=y;
-        this.dx=-ctx.measureText(ch).width/2; this.dy=+opts.charSize/2;
-        this.fireworkDy=this.y-hh; const hue=(x/calc.totalWidth)*360;
-        this.color=`hsl(${hue},80%,50%)`;
-        this.lightAlphaColor=`hsla(${hue},80%,light%,alp)`;
-        this.lightColor=`hsl(${hue},80%,light%)`;
-        this.alphaColor=`hsla(${hue},80%,50%,alp)`; this.reset();
-      }
-      Letter.prototype.reset=function(){
-        this.phase="firework"; this.tick=0; this.spawned=false;
-        this.spawningTime=(opts.fireworkSpawnTime*Math.random())|0;
-        this.reachTime=(opts.fireworkBaseReachTime+opts.fireworkAddedReachTime*Math.random())|0;
-        this.lineWidth=opts.fireworkBaseLineWidth+opts.fireworkAddedLineWidth*Math.random();
-        this.prevPoints=[[0,hh,0]];
-      };
-      Letter.prototype.step=function(){
-        if(this.phase==="firework"){
-          if(!this.spawned){ if(++this.tick>=this.spawningTime){ this.tick=0; this.spawned=true; } }
-          else{
-            ++this.tick; const linear=this.tick/this.reachTime; const armonic=Math.sin(linear*TauQuarter);
-            const x=linear*this.x; const y=hh+armonic*this.fireworkDy;
-            if(this.prevPoints.length>opts.fireworkPrevPoints) this.prevPoints.shift();
-            this.prevPoints.push([x,y,linear*this.lineWidth]);
-            const k=1/(this.prevPoints.length-1);
-            for(let i=1;i<this.prevPoints.length;++i){
-              const p=this.prevPoints[i], p2=this.prevPoints[i-1];
-              ctx.strokeStyle=this.alphaColor.replace("alp", i/this.prevPoints.length);
-              ctx.lineWidth=p[2]*k*i; ctx.beginPath(); ctx.moveTo(p[0],p[1]); ctx.lineTo(p2[0],p2[1]); ctx.stroke();
-            }
-            if(this.tick>=this.reachTime){
-              this.phase="contemplate"; this.circleFinalSize=opts.fireworkCircleBaseSize+opts.fireworkAddedSize*Math.random();
-              this.circleCompleteTime=(opts.fireworkCircleBaseTime+opts.fireworkAddedTime*Math.random())|0;
-              this.circleCreating=true; this.circleFading=false;
-              this.circleFadeTime=(opts.fireworkCircleFadeBaseTime+opts.fireworkAddedTime*Math.random())|0;
-              this.tick=0; this.tick2=0; this.shards=[];
-              const count=(opts.fireworkBaseShards+opts.fireworkAddedShards*Math.random())|0;
-              const angle=Tau/count, cos=Math.cos(angle), sin=Math.sin(angle);
-              let vx=1, vy=0; for(let i=0;i<count;++i){ const tx=vx; vx=vx*cos - vy*sin; vy=vy*cos + tx*sin; this.shards.push(new Shard(this.x,this.y,vx,vy,this.alphaColor)); }
-            }
-          }
-        } else if(this.phase==="contemplate"){ /* ... unchanged ... */ }
-        else if(this.phase==="balloon"){ /* ... unchanged ... */ }
-      };
-      function Shard(x,y,vx,vy,color){ const vel=4+2*Math.random(); this.vx=vx*vel; this.vy=vy*vel; this.x=x; this.y=y; this.prevPoints=[[x,y]]; this.color=color; this.alive=true; this.size=3+3*Math.random(); }
-      Shard.prototype.step=function(){ this.x+=this.vx; this.y+= (this.vy += 0.1); if(this.prevPoints.length>3) this.prevPoints.shift(); this.prevPoints.push([this.x,this.y]);
-        const lw=this.size/this.prevPoints.length;
-        for(let k=0;k<this.prevPoints.length-1;++k){ const p1=this.prevPoints[k], p2=this.prevPoints[k+1]; ctx.strokeStyle=this.color.replace("alp", k/this.prevPoints.length); ctx.lineWidth=k*lw; ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]); ctx.stroke(); }
-        if(this.prevPoints[0][1]>hh) this.alive=false;
-      };
-      function generateBalloonPath(ctx,x,y,size){ ctx.beginPath(); ctx.moveTo(x,y); ctx.bezierCurveTo(x-size/2,y-size/2, x-size/4,y-size, x,y-size); ctx.bezierCurveTo(x+size/4,y-size, x+size/2,y-size/2, x,y); }
-      for(let i=0;i<opts.strings.length;++i){ for(let j=0;j<opts.strings[i].length;++j){ letters.push(new Letter(
-        opts.strings[i][j],
-        j*opts.charSpacing + opts.charSpacing/2 - (opts.strings[i].length*opts.charSize)/2,
-        i*opts.lineHeight + opts.lineHeight/2 - (opts.strings.length*opts.lineHeight)/2
-      )); } }
-      function anim(){
-        requestAnimationFrame(anim);
-        if(colorCycle){ hue=(hue+0.6)%360; ctx.fillStyle=`hsl(${hue},60%,8%)`; } else ctx.fillStyle="#111";
-        ctx.fillRect(0,0,w,h); ctx.save(); ctx.translate(hw,hh);
-        let done=true; for(const L of letters){ L.step(); if(L.phase!=="done") done=false; }
-        ctx.restore(); if(done) letters.forEach(L=>L.reset());
-      }
-      anim();
-    }
   </script>
 </body>
 </html>
